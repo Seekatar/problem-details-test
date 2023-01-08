@@ -1,9 +1,7 @@
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using ProblemDetailsTest;
+using ProblemDetailsTest.Controllers;
 using Serilog;
-using System.Net;
-using System.Runtime.CompilerServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -76,6 +74,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+#region endpoints for testing IResult in Minimal APIs
 app.MapGet("/api/throw/map-get", async (HttpContext context) => {
 
     // try to write out problem details, but this doesn't work
@@ -90,13 +89,25 @@ app.MapGet("/api/throw/map-get", async (HttpContext context) => {
             {
                 Title = "Hi from map-get",
                 Status = StatusCodes.Status400BadRequest,
-                Type = "set in map-get"
+                Type = ProblemDetailsException.GetType(StatusCodes.Status400BadRequest)
             }
         });
     }
 
     await context.Response.WriteAsync("Hello World");
 });
+
+app.MapGet("/api/problem", (HttpContext context) => {
+    // take default of all but detail and extensions
+    return Results.Problem("Hi from problem", extensions: ExceptionController.NewTestExtension());
+});
+
+app.MapGet("/api/validation-problem", (HttpContext context) => {
+    // take default of all but detail and extensions
+    var errors = new Dictionary<string, string[]>() { { "s", new string[] { "value missing" } }, { "t", new string[] { "value missing", "not 1" } } };
+    return Results.ValidationProblem(errors, "Hi from validation-problem", extensions: ExceptionController.NewTestExtension());
+});
+#endregion
 
 app.Run();
 

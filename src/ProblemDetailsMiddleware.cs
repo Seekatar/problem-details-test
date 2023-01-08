@@ -46,6 +46,7 @@ public class ProblemDetailsMiddleware
             {
                 if (ex is ProblemDetailsException pde)
                 {
+                    context.Response.StatusCode = pde.ProblemDetails.Status ?? context.Response.StatusCode;
                     await problemDetailsService.WriteAsync(new ProblemDetailsContext
                     {
                         HttpContext = context,
@@ -56,7 +57,7 @@ public class ProblemDetailsMiddleware
                 }
                 else
                 {
-                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                     var pd = new ProblemDetails
                     {
                         Type = ProblemDetailsException.Status500Url,

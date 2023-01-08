@@ -15,7 +15,7 @@ public class ProblemDetailsException : Exception
     public ProblemDetailsException(HttpStatusCode statusCode, LogLevel logLevel = LogLevel.Error) : this(new ProblemDetails
     {
         Status = (int)statusCode,
-        Type = SetType((int)statusCode),
+        Type = GetType((int)statusCode),
         Title = nameof(ProblemDetailsException),
     }, logLevel)
     {
@@ -29,7 +29,7 @@ public class ProblemDetailsException : Exception
     public ProblemDetailsException(Exception e, HttpStatusCode statusCode = HttpStatusCode.InternalServerError, LogLevel logLevel = LogLevel.Error) : this(new ProblemDetails
     {
         Status = (int)statusCode,
-        Type = SetType((int)statusCode),
+        Type = GetType((int)statusCode),
         Title = nameof(HttpStatusCode.InternalServerError),
         Detail = e.Message
     }, logLevel)
@@ -39,7 +39,7 @@ public class ProblemDetailsException : Exception
     public ProblemDetailsException(string title, Exception e, HttpStatusCode statusCode = HttpStatusCode.InternalServerError, LogLevel logLevel = LogLevel.Error) : this(new ProblemDetails
         {
             Status = (int)statusCode,
-            Type = SetType((int)statusCode),
+            Type = GetType((int)statusCode),
             Title = title,
             Detail = e.Message
         },logLevel)
@@ -76,5 +76,5 @@ public class ProblemDetailsException : Exception
         return sb.ToString();
     }
 
-    private static string SetType(int statusCode) => statusCode >= 500 ? Status500Url : Status400Url;
+    public static string GetType(int statusCode) => statusCode >= 500 ? Status500Url : Status400Url;
 }

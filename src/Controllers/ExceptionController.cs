@@ -9,6 +9,19 @@ namespace ProblemDetailsTest.Controllers;
 [Produces("application/json")]
 public class ExceptionController : Controller
 {
+    public static IDictionary<string, object?> NewTestExtension()
+    {
+        Dictionary<string, object?> extensions = new ();
+        SetTestExtension(extensions);
+        return extensions;
+    }
+    static void SetTestExtension(IDictionary<string,object?> extensions)
+    {
+        extensions["extension_value_int"] = 1232;
+        extensions["extension_value_string"] = "Some value";
+        extensions["extension_value_now"] = DateTime.Now;
+        extensions["method_name"] = MethodBase.GetCurrentMethod()?.Name ?? "Unknown";
+    }
     /// <summary>
     /// Throw a not implemented exception
     /// </summary>
@@ -42,14 +55,42 @@ public class ExceptionController : Controller
         var pd = new ProblemDetails()
         {
             Type = "https://www.rfc-editor.org/rfc/rfc7231#section-6.6.1",
-            Status = (int)HttpStatusCode.InternalServerError,
+            Status = StatusCodes.Status500InternalServerError,
             Title = "Throwing ProblemDetailsException",
             Detail = $"My detail message, look for a and status of 500 and log level of {logLevel}",
         };
-        pd.Extensions["extension_value_int"] = 1232;
-        pd.Extensions["extension_value_string"] = "Some value";
-        pd.Extensions["method_name"] = MethodBase.GetCurrentMethod()?.Name ?? "Unknown";
+        SetTestExtension(pd.Extensions);
+        pd.Extensions.Add("log_level", logLevel);
 
         throw new ProblemDetailsException(pd,logLevel);
+    }
+
+    /// <summary>
+    /// Call ControllerBase.Problem
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("/api/throw/problem")]
+    [SwaggerOperation("CallProblem")]
+    [SwaggerResponse(statusCode: 200, type: typeof(Widget), description: "Ok")]
+    public virtual ActionResult CallProblem()
+    {
+        // take default values in ProblemDetails that it creates except for detail
+        // can't pass in extensions
+        return Problem("Hi from problem");
+    }
+
+    /// <summary>
+    /// Call ControllerBase.ValidationProblem
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("/api/throw/validation-problem")]
+    [SwaggerOperation("CallValidationProblem")]
+    [SwaggerResponse(statusCode: 200, type: typeof(Widget), description: "Ok")]
+    public virtual IActionResult CallValidationProblem()
+    {
+        var errors = new ValidationProblemDetails(new Dictionary<string, string[]>() { { "s", new string[] { "value missing" } }, { "t", new string[] { "value missing", "not 1" } } });
+        return ValidationProblem(errors);
     }
 }

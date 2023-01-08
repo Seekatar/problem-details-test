@@ -18,7 +18,7 @@ function WriteResult {
         Write-Host $result.Headers
     }
     if (!$Json) {
-        Write-Host ($result.ToString() | ConvertFrom-Json | out-string)
+        $result.ToString() | ConvertFrom-Json | Format-List
     } else {
         Write-Host $result.ToString()
     }
@@ -40,23 +40,17 @@ $uri = "http://localhost:5138/api/"
 
 $clientId = [Guid]::NewGuid()
 $marketId = 1
-Write-Host "------------ Throw Log Error"
-WriteResult (Invoke-WebRequest "${uri}throw/details/$clientId/$marketId/4" -Headers $headers -SkipHttpErrorCheck -useBasicParsing)
 
-# Write-Host "------------ Throw Log Info"
-# WriteResult (Invoke-WebRequest "${uri}throw/details/$clientId/$marketId/2" -Headers $headers -SkipHttpErrorCheck -useBasicParsing)
-
-# Write-Host "------------ Throw Log None"
-# WriteResult (Invoke-WebRequest "${uri}throw/details/$clientId/$marketId/6" -Headers $headers -SkipHttpErrorCheck -useBasicParsing)
-
-# Write-Host "------------ Throw Log"
-# WriteResult Invoke-WebRequest "${uri}throw/details-log/$clientId/$marketId" -Headers $headers -SkipHttpErrorCheck -useBasicParsing
-
-# Write-Host "------------ Throw Invoke-Logged"
-# WriteResult Invoke-WebRequest "${uri}throw/details-scope/$clientId/$marketId" -Headers $headers -SkipHttpErrorCheck -useBasicParsing
-
-Write-Host "------------ NotImpl"
-WriteResult (Invoke-WebRequest "${uri}throw/not-implemented/$clientId/$marketId" -Headers $headers -SkipHttpErrorCheck -useBasicParsing)
-
-# Write-Host "------------ NotFound"
-# WriteResult (Invoke-WebRequest "${uri}thisIsntFound" -Headers $headers -SkipHttpErrorCheck -useBasicParsing)
+"throw/details/$clientId/$marketId/2", # Info
+"throw/details/$clientId/$marketId/3", # Warning
+"throw/details/$clientId/$marketId/4", # Error
+"throw/details/$clientId/$marketId/6", # None
+"problem",
+"throw/problem",
+"validation-problem",
+"throw/validation-problem",
+"throw/not-implemented/$clientId/$marketId",
+"thisIsntFound" | ForEach-Object {
+    Write-Host "------------ $_"
+    WriteResult (Invoke-WebRequest "$uri$_" -Headers $headers -SkipHttpErrorCheck -useBasicParsing)
+}

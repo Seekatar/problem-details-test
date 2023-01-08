@@ -28,6 +28,13 @@ public class ProblemDetailsMiddleware
         }
         catch (Exception ex)
         {
+            if (context.Response.HasStarted)
+            {
+                throw;
+            }
+            
+            context.Response.Clear();
+            
             if (ex is AggregateException aggr && aggr.InnerExceptions.Count == 1)
             {
                 ex = aggr.InnerExceptions[0];
@@ -62,7 +69,6 @@ public class ProblemDetailsMiddleware
                         HttpContext = context,
                         ProblemDetails = pd
                     });
-                    //  await context.Response.WriteAsJsonAsync(pd);
                     _logger.LogError(ex, "An unhandled exception has occurred while executing the request. In " + nameof(ProblemDetailsMiddleware));
                 }
             }

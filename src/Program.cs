@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using ProblemDetailsTest;
 using Serilog;
 using System.Net;
+using System.Runtime.CompilerServices;
+
 var builder = WebApplication.CreateBuilder(args);
 
 #region Added for Problem Details test
@@ -45,6 +47,8 @@ var app = builder.Build();
 
 #region Added for Problem Details test
 // add default exception handler
+// if this isn't added and ASPNETCORE_ENVIRONMENT=Development, get the UseDeveloperExceptionPage
+// if this isn't added and ASPNETCORE_ENVIRONMENT=Production, get no JSON, just 500
 app.UseExceptionHandler();
 
 // this returns problemDetails if caller sets accept to application/json for responses with status codes between 400 and 599 that do not have a body
@@ -71,6 +75,28 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapGet("/api/throw/map-get", async (HttpContext context) => {
+
+    // try to write out problem details, but this doesn't work
+    if (context.RequestServices.GetService<IProblemDetailsService>() is { } problemDetailsService)
+    {
+        // this gets into here, but still returns 200 and Hello World
+        // if comment out Hello World, then it returns 200 and nothing
+        Console.WriteLine("Hi in map-get");
+        await problemDetailsService.WriteAsync(new ProblemDetailsContext { 
+            HttpContext = context,
+            ProblemDetails = new ProblemDetails
+            {
+                Title = "Hi from map-get",
+                Status = StatusCodes.Status400BadRequest,
+                Type = "set in map-get"
+            }
+        });
+    }
+
+    await context.Response.WriteAsync("Hello World");
+});
 
 app.Run();
 
